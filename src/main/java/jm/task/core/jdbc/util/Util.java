@@ -14,49 +14,88 @@ public class Util {
     private static final Logger logger = Logger.getLogger(Util.class.getName());
 
     public static void DBDriverSetup(Properties dbProperties) {
+        String host = dbProperties.getProperty("db.driver");
         try {
-            Class.forName(dbProperties.getProperty("db.driver"));
+            Class.forName(host);
+            //DriverManager.
         } catch (ClassNotFoundException e) {
             // TODO: Логировать хост
             logger.log(Level.WARNING, "Unable to connect driver", e);
         }
-
-
     }
 
-    public static Connection getConnection(Properties dbProperties) {
-        Connection connection = null;
-
+    public static Connection getConnection(Properties dbProperties) throws SQLException {
         String host = dbProperties.getProperty("db.host");
         String login = dbProperties.getProperty("db.login");
         String password = dbProperties.getProperty("db.password");
 
-        try {
-            connection = DriverManager.getConnection(host, login, password);
-        } catch (SQLException e) {
-            logger.log(Level.WARNING,
-                    "database address: {}; database login: {}", new Object[]{host, login});
-            logger.log(Level.WARNING, "Unable to create sqlConnections", e);
-        }
-
-        return connection;
+        return DriverManager.getConnection(host, login, password);
     }
 
-    public static <R> R query(String query, Properties dbProperties, SQLResultConverter<R> converter) {
+    public static void execute(String query, Properties dbProperties, String... queryArgs) throws SQLException {
+        try (Connection connection = getConnection(dbProperties);
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-        Connection connection = getConnection(dbProperties);
-
-        if (connection != null) {
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery(query);
-                return converter.apply(resultSet);
-            } catch (SQLException e) {
-                // TODO: Логировать проблемный запрос
-                logger.log(Level.WARNING, "Something wrong with query", e);
+            for (int index = 1; index <= queryArgs.length; index++) {
+                statement.setString(index, queryArgs[index - 1]);
             }
-        }
+            statement.execute();
 
-        return null;
+        } catch (SQLException e) {
+            // TODO: Логировать параметры запроса
+            logger.log(Level.WARNING, "Something wrong with query", e);
+            throw e;
+        }
+    }
+
+    public static void execute(String query, Properties dbProperties) throws SQLException {
+        try (Connection connection = getConnection(dbProperties);
+             Statement statement = connection.createStatement()) {
+            statement.execute(query);
+        } catch (SQLException e) {
+            // TODO: Логировать параметры запроса
+            logger.log(Level.WARNING, "Something wrong with query", e);
+            throw e;
+        }
+    }
+
+    public static <R> R query(String query, Properties dbProperties,
+                              SQLResultConverter<R> converter) throws SQLException {
+        try (Connection connection = getConnection(dbProperties);
+             Statement statement = connection.createStatement()) {
+
+            ResultSet resultSet = statement.executeQuery(query);
+            return handleResult(resultSet, converter);
+
+        } catch (SQLException e) {
+            // TODO: Логировать параметры запроса
+            logger.log(Level.WARNING, "Something wrong with query", e);
+            throw e;
+        }
+    }
+
+    public static <R> R query(String query, Properties dbProperties,
+                              SQLResultConverter<R> converter, String... queryArgs) throws SQLException {
+
+        try (Connection connection = getConnection(dbProperties);
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            for (int index = 1; index <= queryArgs.length; index++) {
+                statement.setString(index, queryArgs[index - 1]);
+            }
+
+            ResultSet resultSet = statement.executeQuery(query);
+            return handleResult(resultSet, converter);
+
+        } catch (SQLException e) {
+            // TODO: Логировать параметры запроса
+            logger.log(Level.WARNING, "Something wrong with query", e);
+            throw e;
+        }
+    }
+
+    public static <R> R handleResult(ResultSet statement, SQLResultConverter<R> converter) throws SQLException {
+        return converter.apply(statement);
     }
 
 }
