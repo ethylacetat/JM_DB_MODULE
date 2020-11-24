@@ -1,11 +1,12 @@
 package jm.task.core.jdbc.util;
 
+import java.io.File;
 import java.sql.*;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Util {
+public final class Util {
 
     private Util() {
         // NO-OP
@@ -19,28 +20,82 @@ public class Util {
             Class.forName(host);
             //DriverManager.
         } catch (ClassNotFoundException e) {
-            // TODO: Логировать хост
+            // TODO: Логировать имя класса драйвера
             logger.log(Level.WARNING, "Unable to connect driver", e);
         }
     }
 
-    public static Connection getConnection(Properties dbProperties) throws SQLException {
-        String host = dbProperties.getProperty("db.host");
-        String login = dbProperties.getProperty("db.login");
-        String password = dbProperties.getProperty("db.password");
+    private static Properties dbProperties;
 
-        return DriverManager.getConnection(host, login, password);
+    public static void dbSetup() {
+        dbProperties = new Properties();
+
+        // TODO: Это можно и нужно читать из файла с пропертями
+        // ================================
+        dbProperties.put("db.driver", "com.mysql.cj.jdbc.Driver");
+        dbProperties.put("db.host",
+                "jdbc:mysql://localhost:3306/course_3_1_1_3" +
+                        "?useUnicode=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC");
+        dbProperties.put("db.login", "application");
+        dbProperties.put("db.password", "root");
+        // ================================
+
+        String host = dbProperties.getProperty("db.driver");
+        try {
+            Class.forName(host);
+        } catch (ClassNotFoundException e) {
+            // TODO: Логировать имя класса драйвера
+            logger.log(Level.WARNING, "Unable to connect driver", e);
+        }
+
+        try {
+            retrieveConnection();
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Unable to create connection", e);
+        }
     }
 
-    public static void execute(String query, Properties dbProperties, String... queryArgs) throws SQLException {
-        try (Connection connection = getConnection(dbProperties);
-             PreparedStatement statement = connection.prepareStatement(query)) {
+    private static Connection openedConnection = null;
 
+
+    private static void retrieveConnection() throws SQLException {
+        // isValid(ms) скольо ждать нужно?
+        if (openedConnection == null || !openedConnection.isValid(10)) {
+
+            if (openedConnection != null) {
+                try {
+                    openedConnection.close();
+                } catch (SQLException e) {
+                    // IGNORE
+                }
+            }
+
+            String host = dbProperties.getProperty("db.host");
+            String login = dbProperties.getProperty("db.login");
+            String password = dbProperties.getProperty("db.password");
+
+            openedConnection = DriverManager.getConnection(host, login, password);
+
+        } else {
+            logger.warning("Connection already established");
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        if (openedConnection == null) {
+            retrieveConnection();
+        }
+        return openedConnection;
+    }
+
+    public static void execute(String query, String... queryArgs) throws SQLException {
+        Connection connection = getConnection();
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             for (int index = 1; index <= queryArgs.length; index++) {
                 statement.setString(index, queryArgs[index - 1]);
             }
             statement.execute();
-
         } catch (SQLException e) {
             // TODO: Логировать параметры запроса
             logger.log(Level.WARNING, "Something wrong with query", e);
@@ -48,9 +103,10 @@ public class Util {
         }
     }
 
-    public static void execute(String query, Properties dbProperties) throws SQLException {
-        try (Connection connection = getConnection(dbProperties);
-             Statement statement = connection.createStatement()) {
+    public static void execute(String query) throws SQLException {
+        Connection connection = getConnection();
+
+        try (Statement statement = connection.createStatement()) {
             statement.execute(query);
         } catch (SQLException e) {
             // TODO: Логировать параметры запроса
@@ -59,14 +115,12 @@ public class Util {
         }
     }
 
-    public static <R> R query(String query, Properties dbProperties,
-                              SQLResultConverter<R> converter) throws SQLException {
-        try (Connection connection = getConnection(dbProperties);
-             Statement statement = connection.createStatement()) {
+    public static <R> R query(String query, SQLResultConverter<R> converter) throws SQLException {
+        Connection connection = getConnection();
 
+        try (Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
             return handleResult(resultSet, converter);
-
         } catch (SQLException e) {
             // TODO: Логировать параметры запроса
             logger.log(Level.WARNING, "Something wrong with query", e);
@@ -74,19 +128,16 @@ public class Util {
         }
     }
 
-    public static <R> R query(String query, Properties dbProperties,
-                              SQLResultConverter<R> converter, String... queryArgs) throws SQLException {
+    public static <R> R query(String query, SQLResultConverter<R> converter, String... queryArgs) throws SQLException {
+        Connection connection = getConnection();
 
-        try (Connection connection = getConnection(dbProperties);
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             for (int index = 1; index <= queryArgs.length; index++) {
                 statement.setString(index, queryArgs[index - 1]);
             }
 
             ResultSet resultSet = statement.executeQuery(query);
             return handleResult(resultSet, converter);
-
         } catch (SQLException e) {
             // TODO: Логировать параметры запроса
             logger.log(Level.WARNING, "Something wrong with query", e);
