@@ -85,13 +85,12 @@ public final class Util {
         if (openedConnection == null) {
             retrieveConnection();
         }
-        return openedConnection;
+        return ConnectionWrapper.wrap(openedConnection);
     }
 
     public static void execute(String query, String... queryArgs) throws SQLException {
-        Connection connection = getConnection();
-
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             for (int index = 1; index <= queryArgs.length; index++) {
                 statement.setString(index, queryArgs[index - 1]);
             }
@@ -104,9 +103,8 @@ public final class Util {
     }
 
     public static void execute(String query) throws SQLException {
-        Connection connection = getConnection();
-
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
             statement.execute(query);
         } catch (SQLException e) {
             // TODO: Логировать параметры запроса
@@ -116,9 +114,8 @@ public final class Util {
     }
 
     public static <R> R query(String query, SQLResultConverter<R> converter) throws SQLException {
-        Connection connection = getConnection();
-
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(query);
             return handleResult(resultSet, converter);
         } catch (SQLException e) {
@@ -129,9 +126,8 @@ public final class Util {
     }
 
     public static <R> R query(String query, SQLResultConverter<R> converter, String... queryArgs) throws SQLException {
-        Connection connection = getConnection();
-
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
             for (int index = 1; index <= queryArgs.length; index++) {
                 statement.setString(index, queryArgs[index - 1]);
             }
