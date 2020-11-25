@@ -61,17 +61,9 @@ public class User {
         this.age = age;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("User{");
-        sb.append("id=").append(id);
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", lastName='").append(lastName).append('\'');
-        sb.append(", age=").append(age);
-        sb.append('}');
-        return sb.toString();
-    }
 
+    // Нарушение контрактов ради совместимости с orm вроде как
+    // Доразабраться с этим вопросом
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -80,15 +72,16 @@ public class User {
         if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
-        User user = (User) o;
-        return Objects.equals(getId(), user.getId())
-                && Objects.equals(getName(), user.getName())
-                && Objects.equals(getLastName(), user.getLastName())
-                && Objects.equals(getAge(), user.getAge());
+
+        User other = (User) o;
+        if (this.id != null && this.id != 0L) {
+            return this.id.equals(other.id);
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getLastName(), getAge());
+        return this.id != null ? Long.hashCode(this.id) : 0;
     }
 }
