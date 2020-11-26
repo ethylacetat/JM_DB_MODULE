@@ -24,12 +24,6 @@ public class Main {
 
         UserService service = new UserServiceImpl();
 
-        try {
-            Util.getConnection().close();
-        } catch (SQLException sqlException) {
-            sqlException.printStackTrace();
-        }
-
         service.createUsersTable();
 
         for (int i = 0; i < 4; i++) {

@@ -1,6 +1,7 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.util.JDBCUtil;
 import jm.task.core.jdbc.util.Util;
 
 import java.sql.SQLException;
@@ -16,7 +17,7 @@ public class UserDaoJDBCImpl implements UserDao {
     private final Logger logger = Logger.getLogger(UserDaoJDBCImpl.class.getName());
 
     public UserDaoJDBCImpl() {
-        Util.dbSetup();
+        Util.JDBCConfigure();
     }
 
     private static final String CREATE_USER_TABLE_QUERY =
@@ -30,7 +31,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void createUsersTable() {
         try {
-            Util.execute(CREATE_USER_TABLE_QUERY);
+            JDBCUtil.execute(CREATE_USER_TABLE_QUERY);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "createUsersTable is failed", sqlException);
         }
@@ -40,7 +41,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void dropUsersTable() {
         try {
-            Util.execute(DROP_USER_TABLE_QUERY);
+            JDBCUtil.execute(DROP_USER_TABLE_QUERY);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "dropUsersTable is failed", sqlException);
         }
@@ -52,7 +53,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void saveUser(String name, String lastName, byte age) {
         try {
-            Util.execute(INSERT_USER_QUERY, name, lastName, Byte.toString(age));
+            JDBCUtil.execute(INSERT_USER_QUERY, name, lastName, Byte.toString(age));
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "saveUser is failed", sqlException);
         }
@@ -64,7 +65,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void removeUserById(long id) {
         try {
-            Util.execute(DELETE_USER_BY_ID_QUERY, Long.toString(id));
+            JDBCUtil.execute(DELETE_USER_BY_ID_QUERY, Long.toString(id));
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "removeUserById is failed", sqlException);
         }
@@ -74,7 +75,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public List<User> getAllUsers() {
         try {
-            return Util.query(GET_ALL_USERS_QUERY, result -> {
+            return JDBCUtil.query(GET_ALL_USERS_QUERY, result -> {
                 List<User> users = new ArrayList<>();
 
                 while (result.next()) {
@@ -100,7 +101,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     public void cleanUsersTable() {
         try {
-            Util.execute(CLEAR_USER_TABLE_QUERY);
+            JDBCUtil.execute(CLEAR_USER_TABLE_QUERY);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "cleanUsersTable is failed", sqlException);
         }
