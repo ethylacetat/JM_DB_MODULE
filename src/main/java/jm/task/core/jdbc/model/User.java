@@ -1,13 +1,13 @@
 package jm.task.core.jdbc.model;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Objects;
 
-@Table
+@Entity
+@Table(name = "users")
 public class User {
     @Id
+    @GeneratedValue
     private Long id;
 
     @Column
@@ -78,6 +78,17 @@ public class User {
             return this.id.equals(other.id);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("User{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", lastName='").append(lastName).append('\'');
+        sb.append(", age=").append(age);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
