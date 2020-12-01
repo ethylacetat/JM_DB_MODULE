@@ -84,11 +84,11 @@ public final class Util {
         configurationProperties.put(Environment.USER, "application");
         configurationProperties.put(Environment.PASS, "root");
         configurationProperties.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
-        configurationProperties.put(Environment.SHOW_SQL, "true");
+        //configurationProperties.put(Environment.SHOW_SQL, "true");
         Configuration configuration = new Configuration();
 
         configuration.setProperties(configurationProperties);
-        //configuration.addPackage("jm.task.core.jdbc.model");
+
         configuration.addAnnotatedClass(User.class);
 
 

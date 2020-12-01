@@ -95,24 +95,20 @@ public class HibernateUtil {
             transactionConsumer.accept(session);
 
             transaction.commit();
-            logger.info("isActive: " + transaction.isActive());
-        } catch (RuntimeException te) {
+         } catch (RuntimeException te) {
             exception = te;
             try {
                 if (transaction != null) {
                     transaction.rollback();
                 }
             } catch (RuntimeException rbe) {
-                logger.log(Level.WARNING, "Rollback exception", rbe);
                 te.addSuppressed(rbe);
             }
             throw te;
         } finally {
             try {
                 if (session != null) {
-                    logger.info("Session closed");
                     session.close();
-                    logger.info("isOpened: " + session.isOpen());
                 }
             } catch (RuntimeException closeExceptions) {
                 logger.log(Level.WARNING, "Close exception", closeExceptions);
