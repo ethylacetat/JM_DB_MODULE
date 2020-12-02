@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,62 +19,59 @@ public class UserDaoJDBCImpl implements UserDao {
         Util.JDBCConfigure();
     }
 
-    private static final String CREATE_USER_TABLE_QUERY =
-            "CREATE TABLE users (\n" +
-                    "\tid BIGINT NOT NULL AUTO_INCREMENT,\n" +
-                    "    user_name VARCHAR(255) NOT NULL,\n" +
-                    "    user_lastname VARCHAR(255) NOT NULL,\n" +
-                    "    age TINYINT NOT NULL,\n" +
-                    "    PRIMARY KEY(id)\n" +
-                    ");";
-
     public void createUsersTable() {
+        String query = "CREATE TABLE users (\n" +
+                "\tid BIGINT NOT NULL AUTO_INCREMENT,\n" +
+                "    user_name VARCHAR(255) NOT NULL,\n" +
+                "    user_lastname VARCHAR(255) NOT NULL,\n" +
+                "    age TINYINT NOT NULL,\n" +
+                "    PRIMARY KEY(id)\n" +
+                ");";
+
         try {
-            JDBCUtil.execute(CREATE_USER_TABLE_QUERY);
+            JDBCUtil.execute(query);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "createUsersTable is failed", sqlException);
         }
     }
 
-    private static final String DROP_USER_TABLE_QUERY = "DROP TABLE users;";
-
     public void dropUsersTable() {
+        String query = "DROP TABLE users;";
+
         try {
-            JDBCUtil.execute(DROP_USER_TABLE_QUERY);
+            JDBCUtil.execute(query);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "dropUsersTable is failed", sqlException);
         }
     }
 
-    private static final String INSERT_USER_QUERY =
-            "INSERT INTO users (user_name, user_lastname, age)\n" +
-                    "VALUES (?, ?, ?);";
-
     public void saveUser(String name, String lastName, byte age) {
+        String query = "INSERT INTO users (user_name, user_lastname, age)\n" +
+                "VALUES (?, ?, ?);";
+
         try {
-            JDBCUtil.execute(INSERT_USER_QUERY, name, lastName, Byte.toString(age));
+            JDBCUtil.execute(query, name, lastName, Byte.toString(age));
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "saveUser is failed", sqlException);
         }
     }
 
-    private static final String DELETE_USER_BY_ID_QUERY =
-            "DELETE FROM users\n" +
-                    "WHERE id = ?;";
-
     public void removeUserById(long id) {
+        String query = "DELETE FROM users\n" +
+                "WHERE id = ?;";
+
         try {
-            JDBCUtil.execute(DELETE_USER_BY_ID_QUERY, Long.toString(id));
+            JDBCUtil.execute(query, Long.toString(id));
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "removeUserById is failed", sqlException);
         }
     }
 
-    private static final String GET_ALL_USERS_QUERY = "SELECT * FROM users;";
-
     public List<User> getAllUsers() {
+        String query = "SELECT * FROM users;";
+
         try {
-            return JDBCUtil.query(GET_ALL_USERS_QUERY, result -> {
+            return JDBCUtil.query(query, result -> {
                 List<User> users = new ArrayList<>();
 
                 while (result.next()) {
@@ -97,11 +93,11 @@ public class UserDaoJDBCImpl implements UserDao {
         return Collections.emptyList();
     }
 
-    private static final String CLEAR_USER_TABLE_QUERY = "TRUNCATE users;";
-
     public void cleanUsersTable() {
+        String query = "TRUNCATE users;";
+
         try {
-            JDBCUtil.execute(CLEAR_USER_TABLE_QUERY);
+            JDBCUtil.execute(query);
         } catch (SQLException sqlException) {
             logger.log(Level.WARNING, "cleanUsersTable is failed", sqlException);
         }
