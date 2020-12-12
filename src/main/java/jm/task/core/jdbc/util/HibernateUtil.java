@@ -34,13 +34,29 @@ public class HibernateUtil {
 
     public static void nativeExecute(String nativeSQL) {
         checkedConfigured();
+
         Session session = null;
+        Transaction transaction = null;
+
         RuntimeException exception = null;
         try {
             session = getSession();
+            transaction = session.beginTransaction();
+
             session.createSQLQuery(nativeSQL).executeUpdate();
+
+            transaction.commit();
         } catch (RuntimeException queryEx) {
             exception = queryEx;
+
+            try {
+                if (transaction != null) {
+                    transaction.rollback();
+                }
+            } catch (RuntimeException rbe) {
+                exception.addSuppressed(rbe);
+            }
+
             throw exception;
         } finally {
             if (session != null) {
